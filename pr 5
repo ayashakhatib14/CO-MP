@@ -1,0 +1,126 @@
+Title: Write an X86/64 ALP to find the largest of given Byte/Word/Dword/64-bit numbers.
+; =======================
+; DATA SECTION
+; =======================
+
+section .data
+
+; Define an array of 5 hexadecimal numbers
+array db 79h,59h,33h,22h,44h
+
+; Message 1: Program title
+msg1 db "ALP to find the largest number in an array",10
+msg1_len equ $-msg1
+
+; Message 2: Display array elements
+msg2 db "The array contains the elements:",10
+msg2_len equ $-msg2
+
+; Message 3: Display largest element
+msg3 db 10,"The largest number in the array is:",10
+msg3_len equ $-msg3
+
+; New line character
+newline db 10
+
+; =======================
+; BSS SECTION
+; =======================
+
+section .bss
+
+counter resb 1
+result resb 2
+
+; =======================
+; MACRO FOR WRITE SYSTEM CALL
+; =======================
+
+%macro write 2
+mov rax,1
+mov rdi,1
+mov rsi,%1
+mov rdx,%2
+syscall
+%endmacro
+
+; =======================
+; CODE SECTION
+; =======================
+
+section .text
+global _start
+
+_start:
+
+; Print program title
+write msg1,msg1_len
+
+; Print message before displaying array
+write msg2,msg2_len
+
+DISPLAY ARRAY ELEMENTS
+
+mov byte[counter],5
+mov rsi,array
+
+next:
+mov al,[rsi]
+push rsi
+call disp
+write newline,1
+pop rsi
+inc rsi
+dec byte[counter]
+jnz next
+
+FIND LARGEST ELEMENT
+
+write msg3,msg3_len
+
+mov byte[counter],5
+mov rsi,array
+mov al,0
+
+repeat:
+cmp al,[rsi]
+jg skip
+mov al,[rsi]
+
+skip:
+inc rsi
+dec byte[counter]
+jnz repeat
+
+call disp
+
+EXIT PROGRAM
+
+mov rax,60
+mov rdi,0
+syscall
+
+DISPLAY SUBROUTINE
+
+disp:
+mov bl,al
+mov rdi,result
+mov rcx,2
+
+up1:
+rol bl,4
+mov al,bl
+and al,0Fh
+cmp al,9
+jg add_37
+add al,30h
+jmp store
+
+add_37:
+add al,37h
+
+store:
+mov [rdi],al
+inc rdi
+dec rcx
+jnz up1
