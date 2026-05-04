@@ -1,0 +1,77 @@
+Ayesha Khatib(CO2184)
+;Assignment 7:Convert the 4-digit Hexadecimal to BCD
+section .data
+msg1 db "Enter the 4-digit Hex Number:",0
+len1 equ $-msg1
+msg2 db 10,"Equivalent BCD Number:",0
+len2 equ $-msg2
+newline db 10
+
+section .bss
+num resb 17          ;to store input Hex
+bcd resb 10          ;To store BCD result after conversion
+
+%macro scall 4
+mov rax,%1          ;system call number
+mov rdi,%2          ;file descriptor
+mov rsi,%3          ;buffer adder
+mov rdx,%4          ;length
+syscall
+%endmacro
+
+section .text
+global _start
+
+_start:
+scall 1,1,msg1,len1    ;Display msg for msg1
+scall 0,0,num,5        ;Accept 4-digit hex num
+;Convert ASCII hex to actual hex in rbx
+call ascii_to_hex
+
+;Convert hex to BCD
+mov rax,rbx          ;move hex number to rax for div
+mov rbx,10          ;Divisor
+mov rdi,rbx         ;Result pointer
+
+;Division loop for BCd
+mov rcx,0           ;counter
+loop_bcd:
+mov rdx,0           ;clear remainder 
+push rdx            ;store remainder
+inc rcx
+cmp rax,0
+jnz loop_bcd
+
+;pop remainders and convert into ASCII
+display_bcd:
+pop rdx
+add dl,30h      ;convert to ASCII
+mov [rdi],dl    ;store digit presentin DL into BCD buffer
+inc rdi         ;move pointer 
+loop display_bcd     ;repeat until all digit printed
+
+;print result
+scall 1,1,msg2,len2
+scall 1,1,bcd,5   ;print BCD
+
+;Exit
+mov rax,60
+xor rdi,0
+syscall
+
+ascii_to_hex:
+mov rsi,num    ;mov num to rsi
+mov rbx,0      ;clear rbx register for result
+mov rcx,4      ;4 hex digits
+loop_hex:      
+rol rbx,4      ;rotate left by 4 bits
+mov al,[rsi]   ;load one ascii char
+cmp al,39h     ;39h='9'
+jbe skip    
+sub al,07h     ;convert ascii to numeric
+skip:
+sub al,30h     ;convert ascii to numeric
+add bl,al      ;add digit into result
+inc rsi
+loop loop_hex   ;repeat for 4 digit
+ret
